@@ -113,8 +113,16 @@ impl Client {
             .map_err(TwilioError::NetworkError)?;
 
         match resp.status() {
-            StatusCode::CREATED | StatusCode::OK => {}
-            other => return Err(TwilioError::HTTPError(other)),
+            StatusCode::CREATED | StatusCode::OK => {
+                log::debug!("Ok repsonse from Twilio");
+            }
+            other => {
+                log::error!(
+                    "Full response of error: {:?}",
+                    hyper::body::to_bytes(resp.into_body()).await
+                );
+                return Err(TwilioError::HTTPError(other));
+            }
         };
 
         let decoded: T = hyper::body::to_bytes(resp.into_body())
